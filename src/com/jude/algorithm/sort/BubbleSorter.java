@@ -1,6 +1,7 @@
 package com.jude.algorithm.sort;
 
 import java.util.Comparator;
+import java.util.function.BinaryOperator;
 
 /**
  * 冒泡排序
@@ -20,6 +21,7 @@ public class BubbleSorter<T> implements Sorter<T> {
                 }
             }
         }
+
     }
 
     @Override
