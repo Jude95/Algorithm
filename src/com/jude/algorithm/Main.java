@@ -1,20 +1,17 @@
 package com.jude.algorithm;
 
 import com.jude.algorithm.sort.*;
+import com.jude.algorithm.tree.BinarySearchTree;
 import com.jude.algorithm.utils.ArrayCreator;
 import com.jude.algorithm.utils.SortTimerProxy;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main {
 
     public static void main(String[] args) {
-
-
 
         ArrayList<Sorter<Integer>> sortList = new ArrayList<>();
         sortList.add(SortTimerProxy.obtain(new BubbleSorter<>()));
@@ -25,8 +22,16 @@ public class Main {
         sortList.add(SortTimerProxy.obtain(new HeapSorter<>()));
         sortList.add(SortTimerProxy.obtain(new MergeSorter<>()));
 
+        BinarySearchTree<Integer,String> tree = new BinarySearchTree<>();
+        tree.put(1,"A");
+        tree.put(2,"B");
+        tree.put(3,"C");
+        tree.put(4,"D");
+        tree.remove(3);
+        System.out.println(tree.get(1)+tree.get(2)+tree.get(3)+tree.get(4));
+
 //        testCorrectness(sortList);
-        testSpeed(sortList);
+//        testSpeed(sortList);
     }
 
     private static void testCorrectness(ArrayList<Sorter<Integer>> sortList){
