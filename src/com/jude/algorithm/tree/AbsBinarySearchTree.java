@@ -1,6 +1,6 @@
 package com.jude.algorithm.tree;
 
-import java.util.AbstractMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -16,4 +16,7 @@ public abstract class AbsBinarySearchTree<K,V>{
     public abstract boolean containsKey(K key);
     public abstract boolean containsValue(V value);
     public abstract boolean isEmpty();
+    public abstract Iterator<K> keyIterator();
+    public abstract Iterator<V> valueIterator();
+    public abstract Iterator<Map.Entry<K,V>> EntryIterator();
 }

@@ -1,6 +1,8 @@
 package com.jude.algorithm;
 
 import com.jude.algorithm.sort.*;
+import com.jude.algorithm.tree.AbsBinarySearchTree;
+import com.jude.algorithm.tree.BalancedBinaryTree;
 import com.jude.algorithm.tree.BinarySearchTree;
 import com.jude.algorithm.utils.ArrayCreator;
 import com.jude.algorithm.utils.SortTimerProxy;
@@ -9,30 +11,25 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Main {
+public class SorterTest {
 
     public static void main(String[] args) {
 
         ArrayList<Sorter<Integer>> sortList = new ArrayList<>();
-        sortList.add(SortTimerProxy.obtain(new BubbleSorter<>()));
-        sortList.add(SortTimerProxy.obtain(new InsertionSorter<>()));
-        sortList.add(SortTimerProxy.obtain(new SelectionSorter<>()));
+//        三大慢排序
+//        sortList.add(SortTimerProxy.obtain(new BubbleSorter<>()));
+//        sortList.add(SortTimerProxy.obtain(new InsertionSorter<>()));
+//        sortList.add(SortTimerProxy.obtain(new SelectionSorter<>()));
         sortList.add(SortTimerProxy.obtain(new QuickSorter<>()));
         sortList.add(SortTimerProxy.obtain(new ShellSorter<>()));
         sortList.add(SortTimerProxy.obtain(new HeapSorter<>()));
         sortList.add(SortTimerProxy.obtain(new MergeSorter<>()));
+        sortList.add(SortTimerProxy.obtain(new BinarySearchTreeSorter<>()));
 
-        BinarySearchTree<Integer,String> tree = new BinarySearchTree<>();
-        tree.put(1,"A");
-        tree.put(2,"B");
-        tree.put(3,"C");
-        tree.put(4,"D");
-        tree.remove(3);
-        System.out.println(tree.get(1)+tree.get(2)+tree.get(3)+tree.get(4));
-
-//        testCorrectness(sortList);
+        testCorrectness(sortList);
 //        testSpeed(sortList);
     }
+
 
     private static void testCorrectness(ArrayList<Sorter<Integer>> sortList){
         Random random = new Random();
@@ -56,7 +53,7 @@ public class Main {
 
     private static void testSpeed(ArrayList<Sorter<Integer>> sortList){
         Random random = new Random();
-        Integer[] data = ArrayCreator.create(300000, i -> random.nextInt(100000));
+        Integer[] data = ArrayCreator.create(1000000, i -> random.nextInt(10000000));
         ExecutorService executorService = Executors.newCachedThreadPool();
 
         for (Sorter<Integer> integerSorter : sortList) {

@@ -2,7 +2,6 @@ package com.jude.algorithm.tree;
 
 
 import java.util.*;
-import java.util.function.Consumer;
 
 /**
  * Created by zhuchenxi on 16/3/31.
@@ -27,6 +26,21 @@ public class BinarySearchTree<K,V> extends AbsBinarySearchTree<K,V>{
     @Override
     public boolean isEmpty() {
         return root==null;
+    }
+
+    @Override
+    public Iterator<K> keyIterator() {
+        return new KeyIterator(getFirstEntry());
+    }
+
+    @Override
+    public Iterator<V> valueIterator() {
+        return new ValueIterator(getFirstEntry());
+    }
+
+    @Override
+    public Iterator<Map.Entry<K, V>> EntryIterator() {
+        return new EntryIterator(getFirstEntry());
     }
 
     @Override
@@ -78,43 +92,47 @@ public class BinarySearchTree<K,V> extends AbsBinarySearchTree<K,V>{
 
     @Override
     public V remove(K key) {
+        Entry<K,V> p = getEntry(key);
+        if (p == null)return null;
         modCount++;
-        Entry<K,V> entry = getEntry(key);
-        if (entry==null)return null;
-        if (entry.left==null&&entry.right==null){
-            if (entry == entry.parent.left){
-                entry.parent.left=null;
-            }else {
-                entry.parent.right=null;
-            }
-        }else if (entry.right==null){
-            if (entry == entry.parent.left){
-                entry.parent.left=entry.left;
-            }else {
-                entry.parent.right=entry.left;
-            }
-        }else if (entry.left==null){
-            if (entry == entry.parent.left){
-                entry.parent.left=entry.right;
-            }else {
-                entry.parent.right=entry.right;
-            }
-        }else{
-            Entry<K,V> t = entry.right;
+        size--;
+        if (p.left!=null&&p.right!=null){
+            Entry<K,V> t = p.right;
             while (t.left != null){
                 t = t.left;
             }
             t.parent.left = t.right;
-            if (entry == entry.parent.left){
-                entry.parent.left=t;
+            if (p.parent == null)root = t;
+            else if (p == p.parent.left){
+                p.parent.left=t;
             }else {
-                entry.parent.right=t;
+                p.parent.right=t;
             }
-            t.left = entry.left;
-            t.right = entry.right;
+            t.left = p.left;
+            t.right = p.right;
         }
-        size--;
-        return entry.value;
+        Entry<K,V> replacement = (p.left != null ? p.left : p.right);
+        if (replacement != null){
+            replacement.parent = p.parent;
+            if (p.parent == null)   //如果p为root节点
+                root = replacement;
+            else if (p == p.parent.left)    //如果p是左孩子
+                p.parent.left  = replacement;
+            else                            //如果p是右孩子
+                p.parent.right = replacement;
+
+            p.left = p.right = p.parent = null;     //p的指针清空
+
+        }else if (p.parent == null) { // 如果全树只有一个节点
+            root = null;
+        } else {  //左右子树都为空
+            if (p == p.parent.left)
+                p.parent.left = null;
+            else if (p == p.parent.right)
+                p.parent.right = null;
+            p.parent = null;
+        }
+        return p.value;
     }
 
     @Override
@@ -146,16 +164,38 @@ public class BinarySearchTree<K,V> extends AbsBinarySearchTree<K,V>{
         }
         return null;
     }
+    /**
+     * Returns the first Entry in the TreeMap (according to the TreeMap's
+     * key-sort function).  Returns null if the TreeMap is empty.
+     */
+    final Entry<K,V> getFirstEntry() {
+        Entry<K,V> p = root;
+        if (p != null)
+            while (p.left != null)
+                p = p.left;
+        return p;
+    }
 
+    /**
+     * Returns the last Entry in the TreeMap (according to the TreeMap's
+     * key-sort function).  Returns null if the TreeMap is empty.
+     */
+    final Entry<K,V> getLastEntry() {
+        Entry<K,V> p = root;
+        if (p != null)
+            while (p.right != null)
+                p = p.right;
+        return p;
+    }
     /**
      * Base class for TreeMap Iterators
      */
-     class EntryIterator<T> implements Iterator<T> {
+     abstract class PrivateEntryIterator<T> implements Iterator<T> {
         Entry<K,V> next;
         Entry<K,V> lastReturned;
         int expectedModCount;
 
-        EntryIterator(Entry<K,V> first) {
+        PrivateEntryIterator(Entry<K,V> first) {
             expectedModCount = modCount;
             lastReturned = null;
             next = first;
@@ -165,10 +205,6 @@ public class BinarySearchTree<K,V> extends AbsBinarySearchTree<K,V>{
             return next != null;
         }
 
-        @Override
-        public T next() {
-            return null;
-        }
 
         final Entry<K,V> nextEntry() {
             Entry<K,V> e = next;
@@ -200,15 +236,39 @@ public class BinarySearchTree<K,V> extends AbsBinarySearchTree<K,V>{
             // deleted entries are replaced by their successors
             if (lastReturned.left != null && lastReturned.right != null)
                 next = lastReturned;
-            deleteEntry(lastReturned);
+            BinarySearchTree.this.remove(lastReturned.getKey());
             expectedModCount = modCount;
             lastReturned = null;
         }
 
-        @Override
-        public void forEachRemaining(Consumer<? super T> action) {
+    }
 
+    private final class EntryIterator extends PrivateEntryIterator<Map.Entry<K,V>> {
+        EntryIterator(Entry<K,V> first) {
+            super(first);
         }
+        public Map.Entry<K,V> next() {
+            return nextEntry();
+        }
+    }
+
+    private final class ValueIterator extends PrivateEntryIterator<V> {
+        ValueIterator(Entry<K,V> first) {
+            super(first);
+        }
+        public V next() {
+            return nextEntry().value;
+        }
+    }
+
+    private final class KeyIterator extends PrivateEntryIterator<K> {
+        KeyIterator(Entry<K,V> first) {
+            super(first);
+        }
+        public K next() {
+            return nextEntry().key;
+        }
+
     }
 
     static final class Entry<K,V> implements Map.Entry<K,V> {
@@ -276,7 +336,49 @@ public class BinarySearchTree<K,V> extends AbsBinarySearchTree<K,V>{
             return key + "=" + value;
         }
     }
+    /**
+     * Returns the successor of the specified Entry, or null if no such.
+     */
+    static <K,V> Entry<K,V> successor(Entry<K,V> t) {
+        if (t == null)
+            return null;
+        else if (t.right != null) {
+            Entry<K,V> p = t.right;
+            while (p.left != null)
+                p = p.left;
+            return p;
+        } else {
+            Entry<K,V> p = t.parent;
+            Entry<K,V> ch = t;
+            while (p != null && ch == p.right) {
+                ch = p;
+                p = p.parent;
+            }
+            return p;
+        }
+    }
 
+    /**
+     * Returns the predecessor of the specified Entry, or null if no such.
+     */
+    static <K,V> Entry<K,V> predecessor(Entry<K,V> t) {
+        if (t == null)
+            return null;
+        else if (t.left != null) {
+            Entry<K,V> p = t.left;
+            while (p.right != null)
+                p = p.right;
+            return p;
+        } else {
+            Entry<K,V> p = t.parent;
+            Entry<K,V> ch = t;
+            while (p != null && ch == p.left) {
+                ch = p;
+                p = p.parent;
+            }
+            return p;
+        }
+    }
     /**
      * Compares two keys using the correct comparison method for this TreeMap.
      */
@@ -294,4 +396,8 @@ public class BinarySearchTree<K,V> extends AbsBinarySearchTree<K,V>{
         return (o1==null ? o2==null : o1.equals(o2));
     }
 
+    @Override
+    public String toString() {
+        return "BinarySearchTree -- 二叉搜索树";
+    }
 }
